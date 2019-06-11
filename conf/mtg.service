@@ -1,0 +1,23 @@
+[Unit]
+Description=Bullshit-free MTPROTO proxy for Telegram
+Documentation=https://github.com/9seconds/mtg
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+Restart=always
+
+; User and group the process will run as.
+User=root
+Group=root
+
+EnvironmentFile=/etc/mtg.conf
+ExecStart=/usr/local/bin/mtg #SECRET#
+
+; Limit the number of file descriptors; see `man systemd.exec` for more limit settings.
+LimitNOFILE=1048576
+; Unmodified caddy is not expected to use more than that.
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target
