@@ -3,7 +3,7 @@ Binary dist script for mtg ( https://github.com/9seconds/mtg ).
 
 # Install
 ```
-bash <(wget -O - https://raw.githubusercontent.com/cutelua/mtg-dist/master/install.sh)
+bash <(wget -O - https://git.io/mtg.sh)
 ```
 
 # Compile
