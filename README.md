@@ -1,10 +1,12 @@
 # mtg-dist
-Binary dist script for mtg.
+Binary dist script for mtg ( https://github.com/9seconds/mtg ).
 
 # Install
 ```
-wget -q -O - https://api.github.com/repos/cutelua/mtg-dist/releases/latest \
-| grep browser_download_url \
-| cut -d '"' -f 4 \
-| wget -q -i - -O /tmp/mtg.bin && bash /tmp/mtg.bin && rm -f /tmp/mtg.bin 
+bash <(wget -O - https://raw.githubusercontent.com/cutelua/mtg-dist/master/install.sh)
 ```
+
+# Compile
+The binary `bin/mtg` is directly compile from mtg repo. It's for `linux/amd64` only.
+
+`./makebin.sh` builds self-extract script using `makeself`.

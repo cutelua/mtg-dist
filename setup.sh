@@ -18,9 +18,9 @@ SECRET=$(head -c 512 /dev/urandom | md5sum | cut -f 1 -d ' ')
 sed -i "s/#PORT#/$PORT/" $__dir/conf/mtg.conf
 sed -i "s/#SECRET#/$SECRET/" $__dir/conf/mtg.service
 
-install -v -m755 $__dir/bin/mtg          /usr/local/bin
-install -v -m644 $__dir/conf/mtg.service /lib/systemd/system/
-install -v -m644 $__dir/conf/mtg.conf    /etc/
+install -m755 $__dir/bin/mtg          /usr/local/bin
+install -m644 $__dir/conf/mtg.service /lib/systemd/system/
+install -m644 $__dir/conf/mtg.conf    /etc/
 
 systemctl daemon-reload
 systemctl enable  mtg
