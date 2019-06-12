@@ -12,13 +12,60 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
 
+OSARCH=$(uname -m)
+case $OSARCH in 
+    x86_64)
+        BINTAG=linux-amd64
+        ;;
+    i*86)
+        BINTAG=linux-386
+        ;;
+    arm64)
+        BINTAG=linux-arm64
+        ;;
+    arm*)
+        BINTAG=linux-arm
+        ;;
+    *)
+        echo "unsupported OSARCH: $OSARCH"
+        exit 1
+        ;;
+esac
+
+DEFINPUT () {
+    local DEFAULT=$1
+    local INPUT
+    read INPUT
+    if [[ -z $INPUT ]]; then
+        echo "$DEFAULT"
+    else
+        echo "$INPUT"
+    fi
+}
+
 PORT=$(shuf -i 2000-65000 -n1)
 SECRET=$(head -c 512 /dev/urandom | md5sum | cut -f 1 -d ' ')
+echo "=================================================="
+echo -e ">Random port generated, input another if wish to change:>"
+PORT=$(DEFINPUT $PORT)
+echo ">Random secret generated, input another if wish to change:>"
+SECRET=$(DEFINPUT $SECRET)
+echo -e "> Using: PORT: ${PORT}, SECRET: ${SECRET}\n\n\n"
+echo "=================================================="
 
+MTGBIN=/usr/local/bin/mtg
+wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
+| grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
+| wget -i- -O $MTGBIN
+
+if [[ ! -f $MTGBIN ]]; then
+    echo ">Failed to download ..."
+    exit 1
+fi
+
+chmod 755 $MTGBIN
 sed -i "s/#PORT#/$PORT/" $__dir/conf/mtg.conf
 sed -i "s/#SECRET#/$SECRET/" $__dir/conf/mtg.service
-
-install -m755 $__dir/bin/mtg          /usr/local/bin
 install -m644 $__dir/conf/mtg.service /lib/systemd/system/
 install -m644 $__dir/conf/mtg.conf    /etc/
 
@@ -26,5 +73,9 @@ systemctl daemon-reload
 systemctl enable  mtg
 systemctl restart mtg
 
+echo -e "==================================================\n\n\n"
+echo ">Installation Done. Waiting for service to load ..."
 sleep 3
-wget -q -O - http://127.0.0.1:3129 | grep -E 'tme_url|tg_url'
+echo ">Use the followling url to setup mtproxy in telegram."
+wget -q -O - http://127.0.0.1:3129 | grep -E 'tme_url|tg_url' | sed 's/"//g'
+echo ">Bye."
