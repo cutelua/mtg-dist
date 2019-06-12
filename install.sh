@@ -4,7 +4,7 @@ set -o pipefail
 set -o nounset
 
 TMPDIR=$(mktemp -d)
-trap 'echo Signal caught, cleaning up >&2; cd /; rm -rf "\$TMPDIR"; exit 15' 1 2 3 15
+trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "$TMPDIR"; exit 15' 1 2 3 15
 
 BIN=$TMPDIR/mtg.bin
 wget -qO - https://api.github.com/repos/cutelua/mtg-dist/releases/latest \
