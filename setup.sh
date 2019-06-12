@@ -63,7 +63,10 @@ if [[ ! -f $MTGBIN ]]; then
     exit 1
 fi
 
+echo -e "==================================================\n\n\n"
 chmod 755 $MTGBIN
+$MTGBIN --version
+
 sed -i "s/#PORT#/$PORT/" $__dir/conf/mtg.conf
 sed -i "s/#SECRET#/$SECRET/" $__dir/conf/mtg.service
 install -m644 $__dir/conf/mtg.service /lib/systemd/system/
