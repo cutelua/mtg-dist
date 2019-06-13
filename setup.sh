@@ -46,14 +46,21 @@ DEFINPUT () {
 PORT=$(shuf -i 2000-65000 -n1)
 SECRET=$(head -c 512 /dev/urandom | md5sum | cut -f 1 -d ' ')
 echo "=================================================="
-echo -e ">Random port generated, input another if wish to change:>"
+echo -e ">Random port generated, input another if wish to change, press Enter to continue"
 PORT=$(DEFINPUT $PORT)
-echo ">Random secret generated, input another if wish to change:>"
+echo ">Random secret generated, input another if wish to change, press Enter to continue"
 SECRET=$(DEFINPUT $SECRET)
-echo -e "> Using: PORT: ${PORT}, SECRET: ${SECRET}\n\n\n"
+echo "=================================================="
+echo -e "> Using: PORT: ${PORT}, SECRET: ${SECRET}"
 echo "=================================================="
 
 MTGBIN=/usr/local/bin/mtg
+if [[ -x $MTGBIN ]]; then
+    echo ">Old mtg found. Removing..."
+    systemctl stop mtg
+    rm -f $MTGBIN
+fi
+
 wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
 | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
 | wget -i- -O $MTGBIN
