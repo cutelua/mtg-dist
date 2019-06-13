@@ -12,6 +12,11 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
 
+if ! command -v systemctl >/dev/null 2>&1; then
+    echo "> Sorry but this scripts is only for Linux Dist with systemd, eg: Ubuntu 16.04+/Centos 7+ ..."
+    exit 1
+fi
+
 OSARCH=$(uname -m)
 case $OSARCH in 
     x86_64)
@@ -63,7 +68,7 @@ fi
 
 wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
 | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
-| wget -i- -O $MTGBIN
+| wget --no-verbose -i- -O $MTGBIN
 
 if [[ ! -f $MTGBIN ]]; then
     echo ">Failed to download ..."
