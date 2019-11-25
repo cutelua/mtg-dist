@@ -91,7 +91,9 @@ systemctl restart mtg
 
 echo -e "==================================================\n\n\n"
 echo ">Installation Done. Waiting for service to load ..."
-sleep 3
+sleep 2
+echo "> Generated Secret: ${SECRET}, listening port: ${PORT}"
+SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
 echo ">Use the followling url to setup mtproxy in telegram."
-wget -q -O - http://127.0.0.1:3129 | grep -E 'tme_url|tg_url' | sed 's/"//g'
+echo "https://t.me/proxy?server=${SADDR}&port=${PORT}&secret=${SECRET}"
 echo ">Bye."
