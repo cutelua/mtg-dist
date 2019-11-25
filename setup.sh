@@ -66,6 +66,7 @@ if [[ -x $MTGBIN ]]; then
     rm -f $MTGBIN
 fi
 
+echo "> Downloading mtg binary ..."
 wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
 | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
 | wget --no-verbose -i- -O $MTGBIN
@@ -98,4 +99,5 @@ echo ">  ..."
 SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
 echo "> Setup mtproxy in telegram with this URL: "
 echo "https://t.me/proxy?server=${SADDR}&port=${PORT}&secret=${SECRET}"
+echo ""
 echo "> Bye."
