@@ -49,7 +49,7 @@ DEFINPUT () {
 }
 
 PORT=$(shuf -i 2000-65000 -n1)
-FAKEDOMAIN=
+FAKEDOMAIN=bing.com
 echo "=================================================="
 echo -e ">Random port generated, input another if wish to change, press Enter to continue"
 PORT=$(DEFINPUT $PORT)
