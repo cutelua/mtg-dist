@@ -12,7 +12,7 @@ User=root
 Group=root
 
 EnvironmentFile=/etc/mtg.conf
-ExecStart=/usr/local/bin/mtg #SECRET#
+ExecStart=/usr/local/bin/mtg run #SECRET#
 
 ; Limit the number of file descriptors; see `man systemd.exec` for more limit settings.
 LimitNOFILE=1048576

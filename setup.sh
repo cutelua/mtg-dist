@@ -49,14 +49,14 @@ DEFINPUT () {
 }
 
 PORT=$(shuf -i 2000-65000 -n1)
-SECRET=$(head -c 512 /dev/urandom | md5sum | cut -f 1 -d ' ')
+FAKEDOMAIN=
 echo "=================================================="
 echo -e ">Random port generated, input another if wish to change, press Enter to continue"
 PORT=$(DEFINPUT $PORT)
-echo ">Random secret generated, input another if wish to change, press Enter to continue"
-SECRET=$(DEFINPUT $SECRET)
+echo "Input a domain for FakeTLS mode, \"bing.com\" will be used if left empty"
+FAKEDOMAIN=$(DEFINPUT $FAKEDOMAIN)
 echo "=================================================="
-echo -e "> Using: PORT: ${PORT}, SECRET: ${SECRET}"
+echo -e "> Using: PORT: ${PORT}, DOMAIN : ${FAKEDOMAIN}"
 echo "=================================================="
 
 MTGBIN=/usr/local/bin/mtg
@@ -78,6 +78,7 @@ fi
 echo -e "==================================================\n\n\n"
 chmod 755 $MTGBIN
 $MTGBIN --version
+SECRET=$($MTGBIN generate-secret -c "$FAKEDOMAIN" tls)
 
 sed -i "s/#PORT#/$PORT/" $__dir/conf/mtg.conf
 sed -i "s/#SECRET#/$SECRET/" $__dir/conf/mtg.service
