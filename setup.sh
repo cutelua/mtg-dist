@@ -56,7 +56,7 @@ PORT=$(DEFINPUT $PORT)
 echo "Input a domain for FakeTLS mode, \"bing.com\" will be used if left empty"
 FAKEDOMAIN=$(DEFINPUT $FAKEDOMAIN)
 echo "=================================================="
-echo -e "> Using: PORT: ${PORT}, DOMAIN : ${FAKEDOMAIN}"
+echo -e "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
 echo "=================================================="
 
 MTGBIN=/usr/local/bin/mtg
