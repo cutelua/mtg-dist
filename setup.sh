@@ -79,7 +79,7 @@ fi
 echo -e "==================================================\n\n\n"
 chmod 755 $MTGBIN
 $MTGBIN --version
-SECRET=$($MTGBIN generate-secret -c "$FAKEDOMAIN" tls)
+SECRET=$($MTGBIN generate-secret --hex "$FAKEDOMAIN")
 
 sed -i "s/#PORT#/$PORT/" $__dir/conf/mtg.conf
 sed -i "s/#SECRET#/$SECRET/" $__dir/conf/mtg.service
