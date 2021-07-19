@@ -1,0 +1,31 @@
+secret = "#SECRET#"
+bind-to = "0.0.0.0:#PORT#"
+concurrency = 8192
+tcp-buffer = "4kb"
+prefer-ip = "prefer-ipv6"
+domain-fronting-port = #PORT#
+tolerate-time-skewness = "5s"
+
+[network]
+doh-ip = "9.9.9.9"
+proxies = [
+    # "socks5://user:password@host:port?open_threshold=5&half_open_timeout=1m&reset_failures_timeout=10s"
+]
+
+[network.timeout]
+tcp = "5s"
+http = "10s"
+idle = "1m"
+
+[defense.anti-replay]
+enabled = true
+max-size = "1mib"
+error-rate = 0.001
+[defense.blocklist]
+enabled = true
+download-concurrency = 2
+urls = [
+    # "https://iplists.firehol.org/files/firehol_level1.netset",
+    # "/local.file"
+]
+update-each = "24h"

@@ -11,8 +11,7 @@ Restart=always
 User=root
 Group=root
 
-EnvironmentFile=/etc/mtg.conf
-ExecStart=/usr/local/bin/mtg run #SECRET#
+ExecStart=/usr/local/bin/mtg run /etc/mtg.toml
 
 ; Limit the number of file descriptors; see `man systemd.exec` for more limit settings.
 LimitNOFILE=1048576

@@ -67,28 +67,32 @@ if [[ -x $MTGBIN ]]; then
 fi
 
 echo "> Downloading mtg binary ..."
+DLTEMP=$(mktemp --suffix=.tar.gz)
+EXTMPDIR=$(mktemp -d)
+
 wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
 | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
-| wget --no-verbose -i- -O $MTGBIN
+| wget --no-verbose -i- -O $DLTEMP
 
-if [[ ! -f $MTGBIN ]]; then
+if [[ ! -f $DLTEMP ]]; then
     echo ">Failed to download ..."
     exit 1
 fi
 
-echo -e "==================================================\n\n\n"
-chmod 755 $MTGBIN
-$MTGBIN --version
-SECRET=$($MTGBIN generate-secret -c "$FAKEDOMAIN" tls)
+tar xvf $DLTEMP --strip-components=1 -C $EXTMPDIR
+install -v -m755 $EXTMPDIR/mtg $MTGBIN
 
-sed -i "s/#PORT#/$PORT/" $__dir/conf/mtg.conf
-sed -i "s/#SECRET#/$SECRET/" $__dir/conf/mtg.service
-install -m644 $__dir/conf/mtg.service /lib/systemd/system/
-install -m644 $__dir/conf/mtg.conf    /etc/
+$MTGBIN --version
+rm -rf $DLTEMP $EXTMPDIR
+echo -e "==================================================\n\n\n"
+SECRET=$($MTGBIN generate-secret "$FAKEDOMAIN")
+
+sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
+install -v -m644 $__dir/conf/mtg.service /etc/systemd/system/
+install -v -m644 $__dir/conf/mtg.toml    /etc/
 
 systemctl daemon-reload
-systemctl enable  mtg
-systemctl restart mtg
+systemctl enable --now mtg
 
 echo -e "==================================================\n\n\n"
 echo ">Installation Done. Waiting for service to load ..."
@@ -96,8 +100,9 @@ sleep 2
 echo "> Generated Secret: ${SECRET}"
 echo "> Mtg listening at port: ${PORT}"
 echo ">  ..."
-#SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
+journalctl -u mtg --since today | tee
 echo "> Setup mtproxy in telegram with following URL: "
-journalctl -u mtg --since today | grep tme_url
-echo ""
+SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
+echo "https://t.me/proxy?port=${PORT}&secret=${SECRET}&server=${SADDR}"
+echo "The address maybe incorrect, change it accordingly."
 echo "> Bye."
