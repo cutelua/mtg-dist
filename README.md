@@ -3,7 +3,8 @@ Binary dist script for mtg ( https://github.com/9seconds/mtg ).
 
 ## Note
 
-Update: mtg 1.0+ support MTProto2.0, this script will choose the FakeTLS mode to serve by default. Re-run the install script to upgrade to the latest version. By upgrading to MTProto2.0, the `secret` would starts with `ee`, please be noticed.
+Update: mtg 2.0+ supports FakeTLS mode only.
+Rerun this script to upgrade.
 
 # Install
 ```
@@ -11,8 +12,15 @@ bash <(wget -qO- https://git.io/mtg.sh)
 ```
 
 # Uninstall
+
 ```
-systemctl stop mtg && systemctl disable mtg 
+systemctl disable --now mtg 
+rm -f /usr/local/bin/mtg /etc/systemd/system/mtg.service /etc/mtg.toml   
+```
+
+## for version 0.0.6 and prior
+```
+systemctl disable --now mtg 
 rm -f /usr/local/bin/mtg /lib/systemd/system/mtg.service /etc/mtg.conf    
 ```
 
