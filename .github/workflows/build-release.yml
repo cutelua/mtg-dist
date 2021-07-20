@@ -21,14 +21,15 @@ jobs:
 
     - name: Build
       run: |
-        bash ./makebin.sh
+        echo "GIT Tag: ${GITHUB_REF}"
+        bash ./makebin.sh ${GITHUB_REF}
         
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: mtg-dist.bin
-        prerelease: true
-        draft: false
+        prerelease: false
+        draft: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

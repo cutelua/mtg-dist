@@ -53,13 +53,15 @@ DEFINPUT () {
     fi
 }
 
-DLMTG() {
+RMMTG() {
     if [[ -x $MTGBIN ]]; then
         yellow "> Old mtg found. Removing..."
         systemctl stop mtg
-        rm -f $MTGBIN
+        rm -vf $MTGBIN
     fi
+}
 
+DLMTG() {
     green "> Downloading mtg binary ..."
     DLTEMP=$(mktemp --suffix=.tar.gz)
     EXTMPDIR=$(mktemp -d)
@@ -77,6 +79,7 @@ DLMTG() {
     yellow "> Now extracting ..."
     tar xvf $DLTEMP --strip-components=1 -C $EXTMPDIR
 
+    RMMTG
     yellow "> Install mtg binary ..."
     install -v -m755 $EXTMPDIR/mtg $MTGBIN
 
@@ -86,21 +89,20 @@ DLMTG() {
 
 LOCALMTG() {
     local mtgtar=$1
+    if [[ ! -f $mtgtar ]]; then mtgtar=$USER_PWD/$mtgtar; fi
     if [[ ! -f $mtgtar ]]; then
-        red ">Failed find $mtgtar..."
+        red "> $mtgtar  does not exists"
         exit 1
     fi
-    if [[ -x $MTGBIN ]]; then
-        yellow "> Old mtg found. Removing..."
-        systemctl stop mtg
-        rm -f $MTGBIN
-    fi
+    yellow "> Local tar found, using offline install mode"
+
     EXTMPDIR=$(mktemp -d)
     trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "EXTMPDIR"; exit 15' 1 2 3 15
 
     yellow "> Now extracting ..."
     tar xvf $mtgtar --strip-components=1 -C $EXTMPDIR
 
+    RMMTG
     yellow "> Install mtg binary ..."
     install -v -m755 $EXTMPDIR/mtg $MTGBIN
 
@@ -108,61 +110,49 @@ LOCALMTG() {
     rm -rf $EXTMPDIR
 }
 
+SHOWACCESS(){
+    journalctl -u mtg --since today --no-pager
+    yellow "> Setup mtproxy in telegram with following URL: "
+    mtg access /etc/mtg.toml|grep tme_url
+    yellow "> To checkout all available urls, run \`mtg access /etc/mtg.toml'"
+    green "> Bye."
+}
+
 arg1="${1:-}"
-if [[ ! -z $arg1 ]]; then
-    if [[ ! -f $arg1 ]]; then
-        arg1=$USER_PWD/$arg1
-    fi
-    if [[ ! -f $arg1 ]]; then
-        red "> arg $arg1 does not exists"
-        exit 1
-    fi
-    yellow "> Local tar found, using offline install mode"
-fi
 
 if [[ -f /etc/mtg.toml ]]; then
     yellow "> Previos config (/etc/mtg.toml) exists, only upgrade the mtg binary."
-    if [[ -f $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
+    if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
     systemctl restart mtg
     yellow "> Upgrade succeffully. Here shows the recent logs"
-    journalctl -u mtg --since '1 min ago' | tee
-    green "> Setup mtproxy in telegram with following URL: "
-    mtg access /etc/mtg.toml|grep tme_url
-    green "> Bye."
+    SHOWACCESS
     exit 0
 fi
-
 
 PORT=$(shuf -i 2000-65000 -n1)
 FAKEDOMAIN=hostupdate.vmware.com
 green "=================================================="
-yellow ">Random port generated, input another if wish to change, press Enter to continue"
+yellow "> Input service PORT, or press Enter to use a random port"
 PORT=$(DEFINPUT $PORT)
-yellow "Input a domain for FakeTLS mode, \"$FAKEDOMAIN\" will be used if left empty"
+yellow "> Input a domain for FakeTLS, or press Enter to use \"$FAKEDOMAIN\""
 FAKEDOMAIN=$(DEFINPUT $FAKEDOMAIN)
 green "=================================================="
 yellow "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
 green "=================================================="
 
-if [[ -f $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
-yellow "==================================================\n\n\n"
 SECRET=$($MTGBIN generate-secret "$FAKEDOMAIN")
-
 sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
 install -v -m644 $__dir/conf/mtg.service /etc/systemd/system/
 install -v -m644 $__dir/conf/mtg.toml    /etc/
 
+if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
 systemctl daemon-reload
 systemctl enable --now mtg
 
-yellow "==================================================\n\n\n"
+yellow "=================================================="
 green "> Installation Done. Waiting for service to load ..."
 yellow "> Generated Secret: ${SECRET}"
 yellow "> Listening Port: ${PORT}"
-green ">  ..."
+yellow "=================================================="
 sleep 2
-journalctl -u mtg --since today | tee
-yellow "> Setup mtproxy in telegram with following URL: "
-mtg access /etc/mtg.toml|grep tme_url
-yellow "> To checkout all available urls, run\`mtg access /etc/mtg.toml'"
-green "> Bye."
+SHOWACCESS

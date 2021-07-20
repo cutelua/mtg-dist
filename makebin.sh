@@ -1,9 +1,6 @@
 #! /bin/sh
 PKGNAME="mtg-dist"
-PKGDESC="Bullshit-free MTPROTO proxy Bin package [build $(date '+%Y-%m-%d')]"
+BUILDTAG="${1:-src}"
+PKGDESC="MTGDist [$BUILDTAG][build $(date '+%Y-%m-%d')]"
 START="./setup.sh"
-BASEDIR="$( cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P )"
-
-cd $BASEDIR
-GITVER=$(git describe --tags || git rev-parse --short HEAD)
-makeself --tar-extra "--exclude=.github --exclude=.git --exclude=README.md --exclude=makebin.sh --exclude=install.sh" . $PKGNAME.bin "$PKGDESC" $START
+makeself --tar-extra "--exclude=.gitignore --exclude=.github --exclude=.git --exclude=README.md --exclude=makebin.sh --exclude=install.sh" . $PKGNAME.bin "$PKGDESC" $START
