@@ -25,6 +25,6 @@ rm -f /usr/local/bin/mtg /lib/systemd/system/mtg.service /etc/mtg.conf
 ```
 
 # Compile
-The binary `bin/mtg` is directly compile from mtg repo. It's for `linux/amd64` only.
+This project uses `makeself` to generate a `.bin` file.
 
-`./makebin.sh` builds self-extract script using `makeself`.
+Simple run `./makebin.sh`.
