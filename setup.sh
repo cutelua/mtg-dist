@@ -124,7 +124,7 @@ if [[ -f /etc/mtg.toml ]]; then
     yellow "> Previos config (/etc/mtg.toml) exists, only upgrade the mtg binary."
     if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
     systemctl restart mtg
-    yellow "> Upgrade succeffully. Here shows the recent logs"
+    yellow "> Upgrade success. Here shows the recent logs"
     SHOWACCESS
     exit 0
 fi
@@ -150,7 +150,7 @@ systemctl daemon-reload
 systemctl enable --now mtg
 
 yellow "=================================================="
-green "> Installation Done. Waiting for service to load ..."
+green "> Installation success. Wait for service to load ..."
 yellow "> Generated Secret: ${SECRET}"
 yellow "> Listening Port: ${PORT}"
 yellow "=================================================="
