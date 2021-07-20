@@ -12,11 +12,16 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename ${__file} .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
 
+red() { echo -e "$(tput setaf 1)$*$(tput setaf 9)"; }
+green() { echo -e "$(tput setaf 2)$*$(tput setaf 9)"; }
+yellow() { echo -e "$(tput setaf 3)$*$(tput setaf 9)"; }
+
 if ! command -v systemctl >/dev/null 2>&1; then
-    echo "> Sorry but this scripts is only for Linux Dist with systemd, eg: Ubuntu 16.04+/Centos 7+ ..."
+    red "> Sorry but this scripts is only for Linux Dist with systemd, eg: Ubuntu 16.04+/Centos 7+ ..."
     exit 1
 fi
 
+MTGBIN=/usr/local/bin/mtg
 OSARCH=$(uname -m)
 case $OSARCH in 
     x86_64)
@@ -32,7 +37,7 @@ case $OSARCH in
         BINTAG=linux-arm
         ;;
     *)
-        echo "unsupported OSARCH: $OSARCH"
+        red "unsupported OSARCH: $OSARCH"
         exit 1
         ;;
 esac
@@ -48,44 +53,64 @@ DEFINPUT () {
     fi
 }
 
+DLMTG() {
+    if [[ -x $MTGBIN ]]; then
+        yellow "> Old mtg found. Removing..."
+        systemctl stop mtg
+        rm -f $MTGBIN
+    fi
+
+    green "> Downloading mtg binary ..."
+    DLTEMP=$(mktemp --suffix=.tar.gz)
+    EXTMPDIR=$(mktemp -d)
+    trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "$DLTEMP" "EXTMPDIR"; exit 15' 1 2 3 15
+
+    wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
+    | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
+    | wget --no-verbose -i- -O $DLTEMP
+
+    if [[ ! -f $DLTEMP ]]; then
+        red ">Failed to download ..."
+        exit 1
+    fi
+
+    yellow "> Now extracting ..."
+    tar xvf $DLTEMP --strip-components=1 -C $EXTMPDIR
+
+    yellow "> Install mtg binary ..."
+    install -v -m755 $EXTMPDIR/mtg $MTGBIN
+
+    yellow "> Install mtg done... version: `$MTGBIN --version`"
+    rm -rf $DLTEMP $EXTMPDIR
+}
+
+
+if [[ -f /etc/mtg.toml ]]; then
+    yellow "> Previos config (/etc/mtg.toml) exists, only upgrade the mtg binary."
+    DLMTG
+    systemctl restart mtg
+    yellow "> Upgrade succeffully. Here shows the recent logs"
+    journalctl -u mtg --since '1 min ago' | tee
+    green "> Setup mtproxy in telegram with following URL: "
+    mtg access /etc/mtg.toml|grep tme_url
+    green "> Bye."
+    exit 0
+fi
+
+
 PORT=$(shuf -i 2000-65000 -n1)
 FAKEDOMAIN=hostupdate.vmware.com
-echo "=================================================="
-echo -e ">Random port generated, input another if wish to change, press Enter to continue"
+green "=================================================="
+yellow ">Random port generated, input another if wish to change, press Enter to continue"
 PORT=$(DEFINPUT $PORT)
-echo "Input a domain for FakeTLS mode, \"$FAKEDOMAIN\" will be used if left empty"
+yellow "Input a domain for FakeTLS mode, \"$FAKEDOMAIN\" will be used if left empty"
 FAKEDOMAIN=$(DEFINPUT $FAKEDOMAIN)
-echo "=================================================="
-echo -e "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
-echo "=================================================="
+green "=================================================="
+yellow "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
+green "=================================================="
 
-MTGBIN=/usr/local/bin/mtg
-if [[ -x $MTGBIN ]]; then
-    echo ">Old mtg found. Removing..."
-    systemctl stop mtg
-    rm -f $MTGBIN
-fi
-
-echo "> Downloading mtg binary ..."
-DLTEMP=$(mktemp --suffix=.tar.gz)
-EXTMPDIR=$(mktemp -d)
-trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "$DLTEMP" "EXTMPDIR"; exit 15' 1 2 3 15
-
-wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
-| grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
-| wget --no-verbose -i- -O $DLTEMP
-
-if [[ ! -f $DLTEMP ]]; then
-    echo ">Failed to download ..."
-    exit 1
-fi
-
-tar xvf $DLTEMP --strip-components=1 -C $EXTMPDIR
-install -v -m755 $EXTMPDIR/mtg $MTGBIN
-
-$MTGBIN --version
-rm -rf $DLTEMP $EXTMPDIR
-echo -e "==================================================\n\n\n"
+DLMTG
+yellow "==================================================\n\n\n"
 SECRET=$($MTGBIN generate-secret "$FAKEDOMAIN")
 
 sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
@@ -95,16 +120,14 @@ install -v -m644 $__dir/conf/mtg.toml    /etc/
 systemctl daemon-reload
 systemctl enable --now mtg
 
-echo -e "==================================================\n\n\n"
-echo ">Installation Done. Waiting for service to load ..."
+yellow "==================================================\n\n\n"
+green "> Installation Done. Waiting for service to load ..."
+yellow "> Generated Secret: ${SECRET}"
+yellow "> Listening Port: ${PORT}"
+green ">  ..."
 sleep 2
-echo "> Generated Secret: ${SECRET}"
-echo "> Mtg listening at port: ${PORT}"
-echo ">  ..."
 journalctl -u mtg --since today | tee
-echo "> Setup mtproxy in telegram with following URL: "
-#SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
-#echo "https://t.me/proxy?port=${PORT}&secret=${SECRET}&server=${SADDR}"
+yellow "> Setup mtproxy in telegram with following URL: "
 mtg access /etc/mtg.toml|grep tme_url
-echo "> To checkout all available urls, run\`mtg access /etc/mtg.toml'"
-echo "> Bye."
+yellow "> To checkout all available urls, run\`mtg access /etc/mtg.toml'"
+green "> Bye."
