@@ -4,7 +4,7 @@ Binary dist script for mtg ( https://github.com/9seconds/mtg ).
 ## Note
 
 Update: mtg 2.0+ supports FakeTLS mode only.
-Rerun this script to upgrade.
+Re-run this script to upgrade.
 
 # Install
 ```

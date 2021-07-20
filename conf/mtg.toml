@@ -1,9 +1,13 @@
+# refer to the example config for full documented config options
+# https://github.com/9seconds/mtg/blob/master/example.config.toml
+#
+
 secret = "#SECRET#"
 bind-to = "0.0.0.0:#PORT#"
 concurrency = 8192
 tcp-buffer = "4kb"
-prefer-ip = "prefer-ipv6"
-domain-fronting-port = #PORT#
+prefer-ip = "prefer-ipv4"
+domain-fronting-port = 443
 tolerate-time-skewness = "5s"
 
 [network]
@@ -21,6 +25,7 @@ idle = "1m"
 enabled = true
 max-size = "1mib"
 error-rate = 0.001
+
 [defense.blocklist]
 enabled = true
 download-concurrency = 2

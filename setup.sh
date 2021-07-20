@@ -49,11 +49,11 @@ DEFINPUT () {
 }
 
 PORT=$(shuf -i 2000-65000 -n1)
-FAKEDOMAIN=bing.com
+FAKEDOMAIN=hostupdate.vmware.com
 echo "=================================================="
 echo -e ">Random port generated, input another if wish to change, press Enter to continue"
 PORT=$(DEFINPUT $PORT)
-echo "Input a domain for FakeTLS mode, \"bing.com\" will be used if left empty"
+echo "Input a domain for FakeTLS mode, \"$FAKEDOMAIN\" will be used if left empty"
 FAKEDOMAIN=$(DEFINPUT $FAKEDOMAIN)
 echo "=================================================="
 echo -e "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
@@ -69,6 +69,7 @@ fi
 echo "> Downloading mtg binary ..."
 DLTEMP=$(mktemp --suffix=.tar.gz)
 EXTMPDIR=$(mktemp -d)
+trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "$DLTEMP" "EXTMPDIR"; exit 15' 1 2 3 15
 
 wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
 | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
