@@ -1,9 +1,9 @@
 # mtg-dist
-Binary dist script for mtg ( https://github.com/9seconds/mtg ).
+Oneline distbute and install script for mtg ( https://github.com/9seconds/mtg ).
 
 ## Note
 
-Update: mtg 2.0+ supports FakeTLS mode only.
+mtg 2.0+ supports FakeTLS mode only.
 Re-run this script to upgrade.
 
 # Install
@@ -40,4 +40,6 @@ systemctl restart mtg
 # Compile
 This project uses `makeself` to generate a `.bin` file.
 
-Simple run `./makebin.sh`.
+```
+./makebin.sh
+```
