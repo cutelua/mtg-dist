@@ -103,7 +103,8 @@ echo "> Mtg listening at port: ${PORT}"
 echo ">  ..."
 journalctl -u mtg --since today | tee
 echo "> Setup mtproxy in telegram with following URL: "
-SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
-echo "https://t.me/proxy?port=${PORT}&secret=${SECRET}&server=${SADDR}"
-echo "The address maybe incorrect, change it accordingly."
+#SADDR=$(wget -qO- -4 https://www.cloudflare.com/cdn-cgi/trace | grep 'ip=' | cut -d= -f2)
+#echo "https://t.me/proxy?port=${PORT}&secret=${SECRET}&server=${SADDR}"
+mtg access /etc/mtg.toml|grep tme_url
+echo "> To checkout all available urls, run\`mtg access /etc/mtg.toml'"
 echo "> Bye."
