@@ -6,4 +6,4 @@ BASEDIR="$( cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P )"
 
 cd $BASEDIR
 GITVER=$(git describe --tags || git rev-parse --short HEAD)
-makeself --tar-extra "--exclude=.git --exclude=README.md --exclude=makebin.sh --exclude=install.sh" . ../$PKGNAME-$GITVER-$(date '+%Y%m%d-%H%M%S').bin "$PKGDESC" $START
+makeself --tar-extra "--exclude=.git --exclude=README.md --exclude=makebin.sh --exclude=install.sh" . $PKGNAME.bin "$PKGDESC" $START

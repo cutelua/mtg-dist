@@ -1,0 +1,34 @@
+name: release build
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        ref: 'master'
+
+    - name: Install dep
+      run: 
+        sudo apt-get install -y makeself
+
+    - name: Build
+      run: |
+        bash ./makebin.sh
+        
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: mtg-dist.bin
+        prerelease: true
+        draft: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
