@@ -11,6 +11,18 @@ Re-run this script to upgrade.
 bash <(wget -qO- https://git.io/mtg.sh)
 ```
 
+## Offline Install
+
+For machines have difficulties visiting github, download the following files:
+
+- `mtg-dist.bin` from [release](https://github.com/cutelua/mtg-dist/releases)
+- `mtg-2.x.x-linux-amd64.tar.gz` from [mtg/release](https://github.com/9seconds/mtg/releases)
+
+the run: 
+```
+sh mtg-dist.bin mtg-2.0.1-linux-amd64.tar.gz
+```
+
 # Uninstall
 
 ```

@@ -84,10 +84,45 @@ DLMTG() {
     rm -rf $DLTEMP $EXTMPDIR
 }
 
+LOCALMTG() {
+    local mtgtar=$1
+    if [[ ! -f $mtgtar ]]; then
+        red ">Failed find $mtgtar..."
+        exit 1
+    fi
+    if [[ -x $MTGBIN ]]; then
+        yellow "> Old mtg found. Removing..."
+        systemctl stop mtg
+        rm -f $MTGBIN
+    fi
+    EXTMPDIR=$(mktemp -d)
+    trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "EXTMPDIR"; exit 15' 1 2 3 15
+
+    yellow "> Now extracting ..."
+    tar xvf $mtgtar --strip-components=1 -C $EXTMPDIR
+
+    yellow "> Install mtg binary ..."
+    install -v -m755 $EXTMPDIR/mtg $MTGBIN
+
+    yellow "> Install mtg done... version: `$MTGBIN --version`"
+    rm -rf $EXTMPDIR
+}
+
+arg1="${1:-}"
+if [[ ! -z $arg1 ]]; then
+    if [[ ! -f $arg1 ]]; then
+        arg1=$USER_PWD/$arg1
+    fi
+    if [[ ! -f $arg1 ]]; then
+        red "> arg $arg1 does not exists"
+        exit 1
+    fi
+    yellow "> Local tar found, using offline install mode"
+fi
 
 if [[ -f /etc/mtg.toml ]]; then
     yellow "> Previos config (/etc/mtg.toml) exists, only upgrade the mtg binary."
-    DLMTG
+    if [[ -f $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
     systemctl restart mtg
     yellow "> Upgrade succeffully. Here shows the recent logs"
     journalctl -u mtg --since '1 min ago' | tee
@@ -109,7 +144,7 @@ green "=================================================="
 yellow "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
 green "=================================================="
 
-DLMTG
+if [[ -f $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
 yellow "==================================================\n\n\n"
 SECRET=$($MTGBIN generate-secret "$FAKEDOMAIN")
 
