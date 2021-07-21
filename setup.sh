@@ -21,26 +21,31 @@ if ! command -v systemctl >/dev/null 2>&1; then
     exit 1
 fi
 
-MTGBIN=/usr/local/bin/mtg
-OSARCH=$(uname -m)
-case $OSARCH in 
-    x86_64)
-        BINTAG=linux-amd64
-        ;;
-    i*86)
-        BINTAG=linux-386
-        ;;
-    arm64)
-        BINTAG=linux-arm64
-        ;;
-    arm*)
-        BINTAG=linux-arm
-        ;;
-    *)
-        red "unsupported OSARCH: $OSARCH"
+BINEXEC=/usr/local/bin/mtg
+GetBinTag() {
+    if [[ $(uname -s) != "Linux" ]]; then
+        red "unsupported OS: $(uname -s)"
         exit 1
-        ;;
-esac
+    fi
+    case $(uname -m) in 
+        x86_64)
+            echo "linux-amd64"
+            ;;
+        i*86)
+            echo "linux-386"
+            ;;
+        arm64)
+            echo "linux-arm64"
+            ;;
+        arm*)
+            echo "linux-arm"
+            ;;
+        *)
+            red "unsupported OSARCH: $OSARCH"
+            exit 1
+            ;;
+    esac
+}
 
 DEFINPUT () {
     local DEFAULT=$1
@@ -53,37 +58,28 @@ DEFINPUT () {
     fi
 }
 
-RMMTG() {
-    if [[ -x $MTGBIN ]]; then
-        yellow "> Old mtg found. Removing..."
-        systemctl stop mtg
-        rm -vf $MTGBIN
-    fi
-}
-
 DLMTG() {
-    green "> Downloading mtg binary ..."
     DLTEMP=$(mktemp --suffix=.tar.gz)
     EXTMPDIR=$(mktemp -d)
     trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "$DLTEMP" "EXTMPDIR"; exit 15' 1 2 3 15
 
+    yellow "> Downloading mtg binary ..."
     wget -qO- https://api.github.com/repos/9seconds/mtg/releases/latest \
-    | grep browser_download_url | grep "$BINTAG" | cut -d '"' -f 4 \
-    | wget --no-verbose -i- -O $DLTEMP
+    | grep browser_download_url | grep $(GetBinTag) | cut -d '"' -f 4 \
+    | wget -q -i- -O $DLTEMP
 
     if [[ ! -f $DLTEMP ]]; then
-        red ">Failed to download ..."
+        red "> Failed to download ..."
         exit 1
     fi
 
-    yellow "> Now extracting ..."
+    yellow "> Extracting ..."
     tar xvf $DLTEMP --strip-components=1 -C $EXTMPDIR
 
-    RMMTG
+    systemctl stop mtg || true
     yellow "> Install mtg binary ..."
-    install -v -m755 $EXTMPDIR/mtg $MTGBIN
-
-    yellow "> Install mtg done... version: `$MTGBIN --version`"
+    install -v -m755 $EXTMPDIR/mtg $BINEXEC
+    yellow "> Cleanup tmp ..."
     rm -rf $DLTEMP $EXTMPDIR
 }
 
@@ -99,21 +95,29 @@ LOCALMTG() {
     EXTMPDIR=$(mktemp -d)
     trap 'echo Signal caught, cleaning up >&2; cd /; /bin/rm -rf "EXTMPDIR"; exit 15' 1 2 3 15
 
-    yellow "> Now extracting ..."
+    yellow "> Extracting ..."
     tar xvf $mtgtar --strip-components=1 -C $EXTMPDIR
 
-    RMMTG
+    systemctl stop mtg || true
     yellow "> Install mtg binary ..."
-    install -v -m755 $EXTMPDIR/mtg $MTGBIN
-
-    yellow "> Install mtg done... version: `$MTGBIN --version`"
+    install -v -m755 $EXTMPDIR/mtg $BINEXEC
+    yellow "> Cleanup tmp ..."
     rm -rf $EXTMPDIR
 }
 
 SHOWACCESS(){
     journalctl -u mtg --since today --no-pager
     yellow "> Setup mtproxy in telegram with following URL: "
-    mtg access /etc/mtg.toml|grep tme_url
+
+    if command -v jq >/dev/null 2>&1; then
+        yellow "> IPv6 Access"
+        $BINEXEC access /etc/mtg.toml | jq -r .ipv6.tme_url
+        yellow "> IPv4 Access"
+        $BINEXEC access /etc/mtg.toml | jq -r .ipv4.tme_url
+    else
+        $BINEXEC access /etc/mtg.toml | grep tme_url
+    fi
+    
     yellow "> To checkout all available urls, run \`mtg access /etc/mtg.toml'"
     green "> Bye."
 }
@@ -123,6 +127,7 @@ arg1="${1:-}"
 if [[ -f /etc/mtg.toml ]]; then
     yellow "> Previos config (/etc/mtg.toml) exists, only upgrade the mtg binary."
     if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
+    yellow "> Installed mtg version: `$BINEXEC --version`"
     systemctl restart mtg
     yellow "> Upgrade success. Here shows the recent logs"
     SHOWACCESS
@@ -140,12 +145,13 @@ green "=================================================="
 yellow "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
 green "=================================================="
 
-SECRET=$($MTGBIN generate-secret "$FAKEDOMAIN")
+SECRET=$($BINEXEC generate-secret "$FAKEDOMAIN")
 sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
 install -v -m644 $__dir/conf/mtg.service /etc/systemd/system/
 install -v -m644 $__dir/conf/mtg.toml    /etc/
 
 if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
+yellow "> Installed mtg version: `$BINEXEC --version`"
 systemctl daemon-reload
 systemctl enable --now mtg
 
