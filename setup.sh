@@ -145,13 +145,14 @@ green "=================================================="
 yellow "> Using: PORT: ${PORT}, FakeTLS DOMAIN : ${FAKEDOMAIN}"
 green "=================================================="
 
+if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
+yellow "> Installed mtg version: `$BINEXEC --version`"
+
 SECRET=$($BINEXEC generate-secret "$FAKEDOMAIN")
 sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
 install -v -m644 $__dir/conf/mtg.service /etc/systemd/system/
 install -v -m644 $__dir/conf/mtg.toml    /etc/
 
-if [[ ! -z $arg1 ]]; then LOCALMTG $arg1; else DLMTG; fi
-yellow "> Installed mtg version: `$BINEXEC --version`"
 systemctl daemon-reload
 systemctl enable --now mtg
 
