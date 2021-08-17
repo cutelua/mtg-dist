@@ -34,7 +34,7 @@ GetBinTag() {
         i*86)
             echo "linux-386"
             ;;
-        arm64)
+        aarch64)
             echo "linux-arm64"
             ;;
         arm*)
