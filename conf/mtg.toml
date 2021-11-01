@@ -5,7 +5,7 @@
 secret = "#SECRET#"
 bind-to = "0.0.0.0:#PORT#"
 concurrency = 8192
-tcp-buffer = "4kb"
+tcp-buffer = "128kb"
 prefer-ip = "prefer-ipv4"
 domain-fronting-port = 443
 tolerate-time-skewness = "5s"
