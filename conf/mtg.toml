@@ -8,7 +8,7 @@ concurrency = 8192
 tcp-buffer = "128kb"
 prefer-ip = "prefer-ipv4"
 domain-fronting-port = 443
-tolerate-time-skewness = "5s"
+tolerate-time-skewness = "#SKEW#"
 
 [network]
 doh-ip = "9.9.9.9"

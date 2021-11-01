@@ -16,12 +16,22 @@ red() { echo -e "$(tput setaf 1)$*$(tput setaf 9)"; }
 green() { echo -e "$(tput setaf 2)$*$(tput setaf 9)"; }
 yellow() { echo -e "$(tput setaf 3)$*$(tput setaf 9)"; }
 
-if ! command -v systemctl >/dev/null 2>&1; then
+if [[ ! -d /run/systemd/system ]]; then
     red "> Sorry but this scripts is only for Linux Dist with systemd, eg: Ubuntu 16.04+/Centos 7+ ..."
     exit 1
 fi
 
 BINEXEC=/usr/local/bin/mtg
+
+CalUnixTsDrifft() {
+  local cfts=$(wget -qO- https://www.cloudflare.com/cdn-cgi/trace | grep ts= | cut -d'=' -f2 | cut -d'.' -f1)
+  local localts=$(date +"%s")
+  local drifft=$(($localts-$cfts))
+  # abs value
+  echo ${drifft#-}
+}
+
+
 GetBinTag() {
     if [[ $(uname -s) != "Linux" ]]; then
         red "unsupported OS: $(uname -s)"
@@ -150,6 +160,14 @@ yellow "> Installed mtg version: `$BINEXEC --version`"
 
 SECRET=$($BINEXEC generate-secret "$FAKEDOMAIN")
 sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
+if [[ $(CalUnixTsDrifft) -gt 5 ]]; then
+  skew=$(CalUnixTsDrifft)
+  skew=$(($skew+5))
+  sed -i "s/#SKEW#/${skew}s/" $__dir/conf/mtg.toml
+else
+  sed -i "s/#SKEW#/5s/" $__dir/conf/mtg.toml
+fi
+
 install -v -m644 $__dir/conf/mtg.service /etc/systemd/system/
 install -v -m644 $__dir/conf/mtg.toml    /etc/
 
@@ -163,3 +181,4 @@ yellow "> Listening Port: ${PORT}"
 yellow "=================================================="
 sleep 2
 SHOWACCESS
+
