@@ -162,6 +162,7 @@ SECRET=$($BINEXEC generate-secret "$FAKEDOMAIN")
 sed -i "s/#PORT#/$PORT/;s/#SECRET#/$SECRET/" $__dir/conf/mtg.toml
 if [[ $(CalUnixTsDrifft) -gt 5 ]]; then
   skew=$(CalUnixTsDrifft)
+  yellow ">>>> This host has a time drift of $skew seconds, setting mtg to tolerate."
   skew=$(($skew+5))
   sed -i "s/#SKEW#/${skew}s/" $__dir/conf/mtg.toml
 else
