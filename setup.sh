@@ -173,7 +173,8 @@ install -v -m644 $__dir/conf/mtg.service /etc/systemd/system/
 install -v -m644 $__dir/conf/mtg.toml    /etc/
 
 systemctl daemon-reload
-systemctl enable --now mtg
+systemctl enable mtg
+systemctl start mtg
 
 yellow "=================================================="
 green "> Installation success. Wait for service to load ..."

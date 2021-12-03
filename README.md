@@ -26,7 +26,8 @@ sh mtg-dist.bin mtg-2.0.1-linux-amd64.tar.gz
 # Uninstall
 
 ```
-systemctl disable --now mtg 
+systemctl disable mtg 
+systemctl stop mtg 
 rm -f /usr/local/bin/mtg /etc/systemd/system/mtg.service /etc/mtg.toml   
 ```
 
