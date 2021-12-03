@@ -33,7 +33,8 @@ rm -f /usr/local/bin/mtg /etc/systemd/system/mtg.service /etc/mtg.toml
 
 ## for version 0.0.6 and prior
 ```
-systemctl disable --now mtg 
+systemctl disable mtg 
+systemctl stop mtg 
 rm -f /usr/local/bin/mtg /lib/systemd/system/mtg.service /etc/mtg.conf    
 ```
 
